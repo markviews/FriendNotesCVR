@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-
+﻿
 namespace FriendNotesCVR {
 
     public partial class UserNote {

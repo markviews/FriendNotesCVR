@@ -5,6 +5,7 @@ using cohtml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Globalization;
+using System.Collections.ObjectModel;
 
 [assembly: MelonInfo(typeof(FriendNotes), "FriendNotes", "1.0.0", "MarkViews")]
 [assembly: MelonGame("Alpha Blend Interactive", "ChilloutVR")]
@@ -23,7 +24,6 @@ namespace FriendNotesCVR {
          * possibly add support for coloring notes / date added friend on nameplate.. low priority
          */
 
-        public static FileInfo notesFile = new FileInfo("UserData/FriendNotes.json");
         public static Dictionary<string, UserNote> notes;
         public static bool showNotesOnNameplates;
         public static bool logDate;
@@ -47,7 +47,19 @@ namespace FriendNotesCVR {
             cat.CreateEntry("logName", true, "Log friend display names");
             cat.CreateEntry("dateFormat", "M/d/yy - hh:mm tt");
 
-            notes = loadNotes();
+            //notes = loadNotes();
+
+            //print notes for testing
+            foreach (string user in notes.Keys) {
+                UserNote userNote = notes[user];
+                string note = userNote.Note;
+
+                MelonLogger.Msg("NOTE: " + user + ": " + note);
+            }
+
+            //add note for testing
+            setNote("TEST_USER_ID", "Cool dude");
+
         }
 
         public override void OnPreferencesSaved() {
@@ -101,11 +113,14 @@ namespace FriendNotesCVR {
         }
 
         public static void saveNotes() {
+            FileInfo notesFile = new FileInfo("UserData/FriendNotes.json");
+
             if (!notesFile.Exists) notesFile.Create().Close();
             File.WriteAllText(notesFile.FullName, JsonConvert.SerializeObject(notes, JsonSettings));
         }
 
         public static Dictionary<string, UserNote> loadNotes() {
+            FileInfo notesFile = new FileInfo("UserData/FriendNotes.json");
             if (notesFile.Exists) {
                 try {
                     return JsonConvert.DeserializeObject<Dictionary<string, UserNote>>(File.ReadAllText(notesFile.FullName), JsonSettings);
