@@ -104,16 +104,14 @@ namespace FriendNotesCVR {
             ABI_RC.Core.InteractionSystem.ViewManager.Instance.openMenuKeyboard("");
         }
 
-        //There's got to be a simpler way to get keyboard text..
         private string getKeyboardText() {
-            Transform CohtmlWorldView = ABI_RC.Core.InteractionSystem.ViewManager.Instance.gameObject.transform.Find("CohtmlWorldView");
-            if (CohtmlWorldView == null) return "";
+            GameObject worldView = GameObject.Find("Cohtml/CohtmlWorldView");
+            if (worldView == null) return "";
 
-            TextInputHandler handler = CohtmlWorldView.GetComponent<TextInputHandler>();
-            if (handler == null) return "";
+            CohtmlView htmlView = worldView.GetComponent<CohtmlView>();
+            if (htmlView == null) return "";
 
-            string text = handler.InputText;
-            return text;
+            return htmlView.TextInputHandler.InputText;
         }
 
         public static void setNote(string userID, string newNote) {
