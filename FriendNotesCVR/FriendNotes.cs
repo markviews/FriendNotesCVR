@@ -5,7 +5,9 @@ using cohtml;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Globalization;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.IO;
+using System;
 
 [assembly: MelonInfo(typeof(FriendNotes), "FriendNotes", "1.0.0", "MarkViews")]
 [assembly: MelonGame("Alpha Blend Interactive", "ChilloutVR")]
@@ -31,8 +33,7 @@ namespace FriendNotesCVR {
         public static bool logName;
         public static string dateFormat;
 
-        public static JsonSerializerSettings JsonSettings = new JsonSerializerSettings
-        {
+        public static JsonSerializerSettings JsonSettings = new JsonSerializerSettings {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
             DateParseHandling = DateParseHandling.None,
             Converters = { new IsoDateTimeConverter { DateTimeStyles = DateTimeStyles.AssumeUniversal } },
@@ -47,19 +48,8 @@ namespace FriendNotesCVR {
             cat.CreateEntry("logName", true, "Log friend display names");
             cat.CreateEntry("dateFormat", "M/d/yy - hh:mm tt");
 
-            //notes = loadNotes();
-
-            //print notes for testing
-            foreach (string user in notes.Keys) {
-                UserNote userNote = notes[user];
-                string note = userNote.Note;
-
-                MelonLogger.Msg("NOTE: " + user + ": " + note);
-            }
-
-            //add note for testing
-            setNote("TEST_USER_ID", "Cool dude");
-
+            notes = loadNotes();
+            OnPreferencesSaved();
         }
 
         public override void OnPreferencesSaved() {
@@ -73,6 +63,30 @@ namespace FriendNotesCVR {
 
         //just for testing cause I can't test when servers are down :)
         public override void OnUpdate() {
+
+            if (Input.GetKeyDown(KeyCode.P) && Input.GetKey(KeyCode.LeftControl)) {
+                //print notes for testing
+                foreach (string user in notes.Keys) {
+                    UserNote userNote = notes[user];
+                    string note = userNote.Note;
+
+                    MelonLogger.Msg("NOTE: " + user + ": " + note);
+
+                    if (userNote.DisplayNames != null)
+                        foreach(DisplayName name in userNote.DisplayNames) {
+                            MelonLogger.Msg(" " + name.DateFirstSeen + ": " + name.Name);
+                        }
+
+                }
+            }
+
+            if (Input.GetKeyDown(KeyCode.O) && Input.GetKey(KeyCode.LeftControl)) {
+                setNote("TEST_USER_ID2", "Cool dude");
+
+                UserNote userNote = notes["TEST_USER_ID2"];
+                userNote.LogDisplayName("Tupper2");
+                userNote.LogDisplayName("Tupper");
+            }
 
             if (Input.GetKeyDown(KeyCode.K) && Input.GetKey(KeyCode.LeftControl)) {
                 openKeyboard();
@@ -101,7 +115,6 @@ namespace FriendNotesCVR {
             string text = handler.InputText;
             return text;
         }
-
 
         public static void setNote(string userID, string newNote) {
             if (notes.ContainsKey(userID)) notes[userID].Note = newNote;
