@@ -8,6 +8,10 @@ using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
 using System;
+using ABI_RC.Core.InteractionSystem;
+using HarmonyLib;
+using ABI_RC.Core.Networking.IO.Social;
+using System.Reflection;
 
 [assembly: MelonInfo(typeof(FriendNotes), "FriendNotes", "1.0.0", "MarkViews")]
 [assembly: MelonGame("Alpha Blend Interactive", "ChilloutVR")]
@@ -32,6 +36,7 @@ namespace FriendNotesCVR {
         public static bool showDateOnNameplates;
         public static bool logName;
         public static string dateFormat;
+        private static string LastSelectedGUID = "";
 
         public static JsonSerializerSettings JsonSettings = new JsonSerializerSettings {
             MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
@@ -50,6 +55,14 @@ namespace FriendNotesCVR {
 
             notes = loadNotes();
             OnPreferencesSaved();
+
+
+            HarmonyInstance.Patch(typeof(ViewManager).GetMethod(nameof(ViewManager.OnUserDetailsRequestReady), AccessTools.all), null, new HarmonyMethod(typeof(FriendNotes).GetMethod(nameof(UserRequested), BindingFlags.NonPublic | BindingFlags.Static)));
+        }
+
+        private static void UserRequested() {
+            LastSelectedGUID = Users.Requested.UserId;
+            MelonLogger.Msg(LastSelectedGUID);
         }
 
         public override void OnPreferencesSaved() {
@@ -60,48 +73,36 @@ namespace FriendNotesCVR {
             dateFormat = MelonPreferences.GetEntryValue<string>("FriendNotes", "dateFormat");
         }
 
-
-        //just for testing cause I can't test when servers are down :)
-        public override void OnUpdate() {
-
-            if (Input.GetKeyDown(KeyCode.P) && Input.GetKey(KeyCode.LeftControl)) {
-                //print notes for testing
-                foreach (string user in notes.Keys) {
-                    UserNote userNote = notes[user];
-                    string note = userNote.Note;
-
-                    MelonLogger.Msg("NOTE: " + user + ": " + note);
-
-                    if (userNote.DisplayNames != null)
-                        foreach(DisplayName name in userNote.DisplayNames) {
-                            MelonLogger.Msg(" " + name.DateFirstSeen + ": " + name.Name);
-                        }
-
-                }
+        /*
+        public void addMenuButton() {
+            GameObject obj = GameObject.Find("Cohtml/CohtmlWorldView");
+            if (obj == null) {
+                MelonLogger.Error("obj null");
+                return;
             }
 
-            if (Input.GetKeyDown(KeyCode.O) && Input.GetKey(KeyCode.LeftControl)) {
-                setNote("TEST_USER_ID2", "Cool dude");
-
-                UserNote userNote = notes["TEST_USER_ID2"];
-                userNote.LogDisplayName("Tupper2");
-                userNote.LogDisplayName("Tupper");
+            CohtmlView view = obj.GetComponent<CohtmlView>();
+            if (view == null) {
+                MelonLogger.Error("view null");
+                return;
             }
 
-            if (Input.GetKeyDown(KeyCode.K) && Input.GetKey(KeyCode.LeftControl)) {
-                openKeyboard();
-            }
+            string js = 
+                "var button = document.createElement('div'); " +
+                "button.innerHTML = 'Edit Note';" +
+                "button.style = 'position: absolute; top: 1%; right: 25%; border-radius: 0.25em; border: 3px solid rgb(89, 136, 93); padding: 0.5em; width: 8em; text-align: center;" +
+                "button.onclick = function(event) { engine.trigger('FriendNotesClickEdit') };" +
+                "document.getElementById('user-detail').appendChild(button);";
 
-            if (Input.GetKeyDown(KeyCode.L) && Input.GetKey(KeyCode.LeftControl)) {
-                MelonLogger.Msg("found text: " + getKeyboardText());
-            }
-
+            view.View.ExecuteScript(js);
+            MelonLogger.Msg("ran js");
         }
+        */
 
         private void openKeyboard() {
-            bool menuOpen = ABI_RC.Core.InteractionSystem.ViewManager.Instance.isGameMenuOpen();
+            bool menuOpen = ViewManager.Instance.isGameMenuOpen();
             if (!menuOpen) return;
-            ABI_RC.Core.InteractionSystem.ViewManager.Instance.openMenuKeyboard("");
+            ViewManager.Instance.openMenuKeyboard("");
         }
 
         private string getKeyboardText() {
