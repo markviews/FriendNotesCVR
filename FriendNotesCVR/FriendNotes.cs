@@ -56,7 +56,6 @@ namespace FriendNotesCVR {
             notes = loadNotes();
             OnPreferencesSaved();
 
-
             HarmonyInstance.Patch(typeof(ViewManager).GetMethod(nameof(ViewManager.OnUserDetailsRequestReady), AccessTools.all), null, new HarmonyMethod(typeof(FriendNotes).GetMethod(nameof(UserRequested), BindingFlags.NonPublic | BindingFlags.Static)));
         }
 
